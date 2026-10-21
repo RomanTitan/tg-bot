@@ -145,9 +145,6 @@ async def cmd_search(message: Message):
             f'ID: {row[0]}\nUsername: {row[1]}\nИмя: {row[2]}\nФамилия: {row[3]}\nПол: {row[4]}\nДень рождения: {row[5]}')
         db.close()
 
-
-
-router = Router()
 ITEMS_PER_PAGE = 5
 
 
