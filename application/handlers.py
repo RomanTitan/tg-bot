@@ -122,30 +122,30 @@ async def process_sex(message: Message, state: FSMContext):
         await state.clear()
 
 
-@router.message(Command("database"))
-async def cmd_database(message: Message):
-    db = sqlite3.connect('/data/server.db')
-    sql = db.cursor()
-    rows = sql.execute(f"SELECT * FROM users").fetchall()
-    for row in rows:
-        await message.answer(
-            f'ID: {row[0]}\nUsername: {row[1]}\nИмя: {row[2]}\nФамилия: {row[3]}\nПол: {row[4]}\nДень рождения: {row[5]}')
-    db.close()
-
-
-@router.message(Command("search"))
-async def cmd_search(message: Message):
-    db = sqlite3.connect('/data/server.db')
-    sql = db.cursor()
-    username = message.text.split(' ')[-1]
-
-    row = sql.execute(f"""SELECT * FROM users WHERE username = {username}""").fetchone()
-    if row is None:
-        await message.answer("Пользователь не найден.")
-    else:
-        await message.answer(
-            f'ID: {row[0]}\nUsername: {row[1]}\nИмя: {row[2]}\nФамилия: {row[3]}\nПол: {row[4]}\nДень рождения: {row[5]}')
-        db.close()
+# @router.message(Command("database"))
+# async def cmd_database(message: Message):
+#     db = sqlite3.connect('/data/server.db')
+#     sql = db.cursor()
+#     rows = sql.execute(f"SELECT * FROM users").fetchall()
+#     for row in rows:
+#         await message.answer(
+#             f'ID: {row[0]}\nUsername: {row[1]}\nИмя: {row[2]}\nФамилия: {row[3]}\nПол: {row[4]}\nДень рождения: {row[5]}')
+#     db.close()
+#
+#
+# @router.message(Command("search"))
+# async def cmd_search(message: Message):
+#     db = sqlite3.connect('/data/server.db')
+#     sql = db.cursor()
+#     username = message.text.split(' ')[-1]
+#
+#     row = sql.execute(f"""SELECT * FROM users WHERE username = {username}""").fetchone()
+#     if row is None:
+#         await message.answer("Пользователь не найден.")
+#     else:
+#         await message.answer(
+#             f'ID: {row[0]}\nUsername: {row[1]}\nИмя: {row[2]}\nФамилия: {row[3]}\nПол: {row[4]}\nДень рождения: {row[5]}')
+#         db.close()
 
 
 ITEMS_PER_PAGE = 5
@@ -173,7 +173,7 @@ def get_pagination_keyboard(page: int, total_count: int):
         builder.add(InlineKeyboardButton(text="Вперед ➡️", callback_data=Pagination(page=page + 1).pack()))
 
 
-    builder.add(InlineKeyboardButton(text="Выйти", callback_data='delete_message', style="danger"))
+    builder.row(InlineKeyboardButton(text="Выйти", callback_data='delete_message', style="danger"))
     return builder.as_markup()
 
 
