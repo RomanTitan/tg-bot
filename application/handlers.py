@@ -5,6 +5,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.filters.callback_data import CallbackData
+from aiogram.utils.formatting import *
 
 from datetime import datetime
 import os
@@ -61,7 +62,7 @@ class Questionnaire(StatesGroup):
 
 @router.message(Command("reg"))
 async def cmd_reg(message: Message, state: FSMContext):
-    db = sqlite3.connect('/data/server_test.db')
+    db = sqlite3.connect('/data/server.db')
     sql = db.cursor()
     if sql.execute(f"""SELECT user_id from users WHERE user_id = {message.from_user.id}""").fetchone() is not None:
         await message.answer('Вы уже зарегестрированы в системе.')
@@ -110,7 +111,7 @@ async def process_sex(message: Message, state: FSMContext):
         bday = user_data.get("bday")
         sex = ('Male' if message.text == '1' else 'Female')
 
-        db = sqlite3.connect('/data/server_test.db')
+        db = sqlite3.connect('/data/server.db')
         sql = db.cursor()
         sql.execute(F"""INSERT INTO users (user_id, username, first_name, last_name, sex, bday, group_id) VALUES (?, ?, ?, ?, ?, ?, ?)
     """, (message.from_user.id, message.from_user.username, first_name, last_name, sex, bday, message.chat.id))
@@ -122,7 +123,7 @@ async def process_sex(message: Message, state: FSMContext):
 
 @router.message(Command("database"))
 async def cmd_database(message: Message):
-    db = sqlite3.connect('/data/server_test.db')
+    db = sqlite3.connect('/data/server.db')
     sql = db.cursor()
     rows = sql.execute(f"SELECT * FROM users").fetchall()
     for row in rows:
@@ -133,7 +134,7 @@ async def cmd_database(message: Message):
 
 @router.message(Command("search"))
 async def cmd_search(message: Message):
-    db = sqlite3.connect('/data/server_test.db')
+    db = sqlite3.connect('/data/server.db')
     sql = db.cursor()
     username = message.text.split(' ')[-1]
 
@@ -145,16 +146,15 @@ async def cmd_search(message: Message):
             f'ID: {row[0]}\nUsername: {row[1]}\nИмя: {row[2]}\nФамилия: {row[3]}\nПол: {row[4]}\nДень рождения: {row[5]}')
         db.close()
 
+
 ITEMS_PER_PAGE = 5
-
-
 class Pagination(CallbackData, prefix="pag"):
     page: int
 
 
 async def get_users_page(page: int):
     offset = (page - 1) * ITEMS_PER_PAGE
-    db = sqlite3.connect('/data/server_test.db')
+    db = sqlite3.connect('/data/server.db')
     sql = db.cursor()
     users = sql.execute(
                 "SELECT user_id, username FROM users LIMIT ? OFFSET ?", (ITEMS_PER_PAGE, offset)).fetchall()
@@ -183,7 +183,7 @@ async def show_users(message: Message):
         await message.answer("База данных пуста.")
         return
 
-    text = f"📊 **Список пользователей (Страница {page}):**\n\n"
+    text = f"📊 ", Bold('Список пользователей'), " (Страница {page}):\n\n"
     for user in users:
         text += f"🆔 {user[0]} — @{user[1]}\n"
 
@@ -196,7 +196,7 @@ async def process_pagination(callback: CallbackQuery, callback_data: Pagination)
     page = callback_data.page
     users, total_count = await get_users_page(page)
 
-    text = f"📊 **Список пользователей (Страница {page}):**\n\n"
+    text = f"📊 ", Bold('Список пользователей'), " (Страница {page}):\n\n"
     for user in users:
         text += f"🆔 {user[0]} — @{user[1]}\n"
 
