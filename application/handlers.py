@@ -153,7 +153,7 @@ async def process_correct(callback: CallbackQuery, state: FSMContext):
 #             f'ID: {row[0]}\nUsername: {row[1]}\nИмя: {row[2]}\nФамилия: {row[3]}\nПол: {row[4]}\nДень рождения: {row[5]}')
 #     db.close()
 #
-#
+
 # @router.message(Command("search"))
 # async def cmd_search(message: Message):
 #     db = sqlite3.connect('/data/server.db')
