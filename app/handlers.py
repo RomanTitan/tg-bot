@@ -5,12 +5,13 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
 from datetime import datetime
+import os
 from random import choice, randint
-import config
 import sqlite3
 
 router = Router()
-bot = Bot(token=config.BOT_TOKEN)
+BOT_TOKEN = os.getenv("TOKEN")
+bot = Bot(token=BOT_TOKEN)
 
 @router.my_chat_member(F.chat.type.in_({"group", "supergroup"}))
 async def bot_added_or_removed(event: ChatMemberUpdated):
