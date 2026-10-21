@@ -21,7 +21,7 @@ async def check_birthdays_today():
     db = sqlite3.connect('/data/server.db')
     sql = db.cursor()
     for user in sql.execute(F"""SELECT user_id, username, first_name, bday FROM users""").fetchall():
-        bday_object = datetime.strptime(user[3], "%Y-%m-%d").date()
+        bday_object = datetime.strptime(user[3], "%d.%m.%Y").date()
 
         if bday_object.month == today.month and bday_object.day == today.day:
             await bot.send_message(chat_id="-5534575983", text=f"{user[2]} (@{user[1]}) сегодня отмечает свой день рождения! Все срочно поздравляем!!!")

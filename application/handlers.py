@@ -1,38 +1,25 @@
 from aiogram import Router, F, Bot
-from aiogram.filters import Command, CommandStart
+from aiogram.filters import Command, CommandStart, callback_data
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import Message, CallbackQuery, InlineKeyboardButton
+from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.filters.callback_data import CallbackData
 from aiogram.utils.formatting import *
 
+import asyncio
 from datetime import datetime
 import os
 from dotenv import load_dotenv
 from random import choice, randint
 import sqlite3
 
+from application.keyboard import inline
 
 load_dotenv()
 router = Router()
 BOT_TOKEN = os.getenv("TOKEN")
 bot = Bot(token=BOT_TOKEN)
-
-# @router.my_chat_member(F.chat.type.in_({"group", "supergroup"}))
-# async def bot_added_or_removed(event: ChatMemberUpdated):
-#     new_status = event.new_chat_member.statu
-#     chat_id = event.chat.id
-#
-#     if new_status in ["member", "administrator"]:
-#         pass
-#
-#
-#     elif new_status in ["left", "kicked"]:
-#         pass
-
-
-
 
 @router.message(Command("info"))
 async def cmd_info(message: Message):
@@ -46,14 +33,6 @@ async def cmd_info(message: Message):
         f"User ID: {message.from_user.id}"
     )
 
-# @router.message(Command("roll"))
-# async def cmd_roll(message: Message):
-#     if randint(1,2) == 1:
-#         await message.reply(text='Лох, ты умер')
-#     else:
-#         await message.reply(text='Что ж, ты жив. Пока что.')
-
-
 class Questionnaire(StatesGroup):
     waiting_for_name = State()
     waiting_for_bday = State()
@@ -66,16 +45,22 @@ async def cmd_reg(message: Message, state: FSMContext):
     db = sqlite3.connect('/data/server.db')
     sql = db.cursor()
     if sql.execute(f"""SELECT user_id from users WHERE user_id = {message.from_user.id}""").fetchone() is not None:
-        await message.answer('Вы уже зарегестрированы в системе.')
+        msg = await message.answer('Вы уже зарегестрированы в системе.')
         db.close()
+        await asyncio.sleep(3)
+        await msg.delete()
     else:
         db.close()
         await message.answer("Привет! Для начала регистрации напиши, пожалуйста, своё имя и фамилию (Например: Иван Иванов).")
+        await state.update_data(user_id=message.from_user.id,
+                                username=message.from_user.username,
+                                group_id=message.chat.id)
         await state.set_state(Questionnaire.waiting_for_name)
 
 @router.message(Questionnaire.waiting_for_name)
 async def process_name(message: Message, state: FSMContext):
     full_name = message.text
+    await message.delete()
     name_parts = full_name.split(maxsplit=1)
     first_name = name_parts[0] if len(name_parts) > 0 else full_name
     last_name = name_parts[1] if len(name_parts) > 1 else ""
@@ -90,36 +75,68 @@ async def process_name(message: Message, state: FSMContext):
 
 @router.message(Questionnaire.waiting_for_bday)
 async def process_bday(message: Message, state: FSMContext):
+    await message.delete()
     try: datetime.strptime(message.text, "%d.%m.%Y")
     except ValueError:
         await message.answer(f"Введи корректную дату в формате ДД.ММ.ГГГГ (Например: 17.01.2008).")
         await state.set_state(Questionnaire.waiting_for_bday)
     else:
-        await state.update_data(bday=datetime.strptime(message.text, "%d.%m.%Y").date())
+        await state.update_data(bday=datetime.strptime(message.text, "%d.%m.%Y"))
 
-        await message.answer(f"Отлично, осталось указать пол. Укажи 1 - мужской, или 2 - женский.")
-        await state.set_state(Questionnaire.waiting_for_sex)
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text='Мужской', callback_data='Male'))
+        builder.add(InlineKeyboardButton(text='Женский', callback_data='Female'))
 
-@router.message(Questionnaire.waiting_for_sex)
-async def process_sex(message: Message, state: FSMContext):
-    if message.text != '1' and message.text != '2':
-        await message.answer('Укажи свой пол: 1 — мужской, 2 — женский')
-        await state.set_state(Questionnaire.waiting_for_sex)
-    else:
+        await message.answer(f"Отлично, осталось указать пол.", reply_markup=builder.as_markup())
+
+
+@router.callback_query(F.data.in_(["Male", "Female"]))
+async def process_sex(callback: CallbackQuery, state: FSMContext):
+    user_data = await state.get_data()
+    user_id = user_data.get('user_id')
+    username = user_data.get('username')
+    group_id = user_data.get('group_id')
+    first_name = user_data.get("first_name")
+    last_name = user_data.get("last_name")
+    bday = user_data.get("bday")
+    sex = callback.data
+    await state.update_data(sex=sex)
+
+    text = (F"Проверь свои данные:\n\n"
+            F"Имя: {first_name}\n"
+            F"Фамилия: {last_name}\n"
+            F"Username: {username}\n"
+            F"Пол: {('Мужской' if sex == "Male" else 'Женский')}"
+            F"День рождения: {bday}")
+
+    await callback.message.edit_text(text, reply_markup=InlineKeyboardMarkup([InlineKeyboardButton(text='Верно', style='Success', callback_data='Correct'),
+                                                                              InlineKeyboardButton(text='Заполнить заново', callback_data='Incorrect')]))
+
+@router.callback_query(F.data.in_(["Correct", "Incorrect"]))
+async def process_correct(callback: CallbackQuery, state: FSMContext):
+    if callback.data == "Correct":
         user_data = await state.get_data()
+        user_id = user_data.get('user_id')
+        username = user_data.get('username')
+        bday = user_data.get("bday")
         first_name = user_data.get("first_name")
         last_name = user_data.get("last_name")
-        bday = user_data.get("bday")
-        sex = ('Male' if message.text == '1' else 'Female')
+        group_id = user_data.get("group_id")
+        sex = user_data.get('sex')
 
         db = sqlite3.connect('/data/server.db')
         sql = db.cursor()
         sql.execute(F"""INSERT INTO users (user_id, username, first_name, last_name, sex, bday, group_id) VALUES (?, ?, ?, ?, ?, ?, ?)
-    """, (message.from_user.id, message.from_user.username, first_name, last_name, sex, bday, message.chat.id))
+        """, (user_id, username, first_name, last_name, sex, bday, group_id))
         db.commit()
         db.close()
-        await message.answer(f"Спасибо за ответы! Регистрация успешна)")
-        await state.clear()
+
+        await callback.message.edit_text("Регистрация успешна.", reply_markup=None)
+    else:
+        await callback.message.edit_text('Пожалуйста, используй команду /reg для повторной регистриации.')
+        await asyncio.sleep(3)
+        await callback.message.delete()
+    await state.clear()
 
 
 # @router.message(Command("database"))
@@ -151,7 +168,6 @@ async def process_sex(message: Message, state: FSMContext):
 ITEMS_PER_PAGE = 5
 class Pagination(CallbackData, prefix="pag"):
     page: int
-
 
 async def get_users_page(page: int):
     offset = (page - 1) * ITEMS_PER_PAGE
@@ -207,7 +223,7 @@ async def process_pagination(callback: CallbackQuery, callback_data: Pagination)
 
     text = f"📊 Список пользователей (Страница {page}/{total_count//ITEMS_PER_PAGE}):\n\n"
     for user in users:
-        text += f"👤{user[0]} {user[1]} — 🎂{user[2]}\n"
+        text += f"👤{user[0]} {user[1]} — 🎂{user[2].date("%d.%m.%Y")}\n"
 
     kb = get_pagination_keyboard(page, total_count)
 
