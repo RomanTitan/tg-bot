@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from datetime import datetime
+import os
 
 import sqlite3
 
@@ -9,11 +10,9 @@ from zoneinfo import ZoneInfo
 from aiogram import Bot, Dispatcher, F
 
 from app.handlers import router
-import config
 
-
-token = config.BOT_TOKEN
-bot = Bot(token=token)
+BOT_TOKEN = os.getenv("TOKEN")
+bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 async def check_birthdays_today():
