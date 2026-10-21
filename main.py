@@ -9,7 +9,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from zoneinfo import ZoneInfo
 from aiogram import Bot, Dispatcher, F
 
-from app.handlers import router
+from application.handlers import router
 
 BOT_TOKEN = os.getenv("TOKEN")
 bot = Bot(token=BOT_TOKEN)
