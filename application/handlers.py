@@ -1,29 +1,34 @@
 from aiogram import Router, F, Bot
 from aiogram.filters import Command, CommandStart
-from aiogram.types import Message, user, ChatMemberUpdated
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
+from aiogram.types import Message, CallbackQuery, InlineKeyboardButton
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.filters.callback_data import CallbackData
 
 from datetime import datetime
 import os
+from dotenv import load_dotenv
 from random import choice, randint
 import sqlite3
 
+
+load_dotenv()
 router = Router()
 BOT_TOKEN = os.getenv("TOKEN")
 bot = Bot(token=BOT_TOKEN)
 
-@router.my_chat_member(F.chat.type.in_({"group", "supergroup"}))
-async def bot_added_or_removed(event: ChatMemberUpdated):
-    new_status = event.new_chat_member.status
-    chat_id = event.chat.id
-
-    if new_status in ["member", "administrator"]:
-        pass
-
-
-    elif new_status in ["left", "kicked"]:
-        pass
+# @router.my_chat_member(F.chat.type.in_({"group", "supergroup"}))
+# async def bot_added_or_removed(event: ChatMemberUpdated):
+#     new_status = event.new_chat_member.statu
+#     chat_id = event.chat.id
+#
+#     if new_status in ["member", "administrator"]:
+#         pass
+#
+#
+#     elif new_status in ["left", "kicked"]:
+#         pass
 
 
 
@@ -139,3 +144,66 @@ async def cmd_search(message: Message):
         await message.answer(
             f'ID: {row[0]}\nUsername: {row[1]}\nИмя: {row[2]}\nФамилия: {row[3]}\nПол: {row[4]}\nДень рождения: {row[5]}')
         db.close()
+
+
+
+router = Router()
+ITEMS_PER_PAGE = 5
+
+
+class Pagination(CallbackData, prefix="pag"):
+    page: int
+
+
+async def get_users_page(page: int):
+    offset = (page - 1) * ITEMS_PER_PAGE
+    db = sqlite3.connect('/data/server_test.db')
+    sql = db.cursor()
+    users = sql.execute(
+                "SELECT user_id, username FROM users LIMIT ? OFFSET ?", (ITEMS_PER_PAGE, offset)).fetchall()
+
+    total_count = sql.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+    return users, total_count
+
+def get_pagination_keyboard(page: int, total_count: int):
+    builder = InlineKeyboardBuilder()
+
+    if page > 1:
+        builder.add(InlineKeyboardButton(text="⬅️ Назад", callback_data=Pagination(page=page - 1).pack()))
+
+    if page * ITEMS_PER_PAGE < total_count:
+        builder.add(InlineKeyboardButton(text="Вперед ➡️", callback_data=Pagination(page=page + 1).pack()))
+
+    return builder.as_markup()
+
+
+@router.message(F.text == "/users")
+async def show_users(message: Message):
+    page = 1
+    users, total_count = await get_users_page(page)
+
+    if not users:
+        await message.answer("База данных пуста.")
+        return
+
+    text = f"📊 **Список пользователей (Страница {page}):**\n\n"
+    for user in users:
+        text += f"🆔 {user[0]} — @{user[1]}\n"
+
+    kb = get_pagination_keyboard(page, total_count)
+    await message.answer(text, reply_markup=kb)
+
+
+@router.callback_query(Pagination.filter())
+async def process_pagination(callback: CallbackQuery, callback_data: Pagination):
+    page = callback_data.page
+    users, total_count = await get_users_page(page)
+
+    text = f"📊 **Список пользователей (Страница {page}):**\n\n"
+    for user in users:
+        text += f"🆔 {user[0]} — @{user[1]}\n"
+
+    kb = get_pagination_keyboard(page, total_count)
+
+    await callback.message.edit_text(text, reply_markup=kb)
+    await callback.answer()

@@ -2,22 +2,23 @@ import asyncio
 import logging
 from datetime import datetime
 import os
-
 import sqlite3
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from zoneinfo import ZoneInfo
 from aiogram import Bot, Dispatcher, F
+from dotenv import load_dotenv
 
 from application.handlers import router
 
+load_dotenv()
 BOT_TOKEN = os.getenv("TOKEN")
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 async def check_birthdays_today():
     today = datetime.now(ZoneInfo("Europe/Moscow")).date()
-    db = sqlite3.connect('/data/server_test.db')
+    db = sqlite3.connect('data/server_test.db')
     sql = db.cursor()
     for user in sql.execute(F"""SELECT user_id, username, first_name, bday FROM users""").fetchall():
         bday_object = datetime.strptime(user[3], "%Y-%m-%d").date()
@@ -40,6 +41,7 @@ async def on_startup():
                 sex TEXT NOT NULL,
                 bday DATETIME NOT NULL,
                 group_id INTEGER
+                admin BOOLEAN not null DEFAULT false
             )""")
     db.commit()
     db.close()
