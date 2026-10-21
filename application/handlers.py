@@ -157,7 +157,7 @@ async def get_users_page(page: int):
     db = sqlite3.connect('/data/server.db')
     sql = db.cursor()
     users = sql.execute(
-                "SELECT user_id, username FROM users LIMIT ? OFFSET ?", (ITEMS_PER_PAGE, offset)).fetchall()
+                "SELECT first_name, last_name, bday FROM users LIMIT ? OFFSET ?", (ITEMS_PER_PAGE, offset)).fetchall()
 
     total_count = sql.execute("SELECT COUNT(*) FROM users").fetchone()[0]
     return users, total_count
@@ -185,9 +185,9 @@ async def show_users(message: Message):
         await message.answer("База данных пуста.")
         return
 
-    text = f"📊 Список пользователей (Страница {page}/{total_count}):\n\n"
+    text = f"📊 Список пользователей (Страница {page}/{total_count//page}):\n\n"
     for user in users:
-        text += f"🆔 {user[0]} — @{user[1]}\n"
+        text += f"👤{user[0]} {user[1]} — 🎂{user[2]}\n"
 
     kb = get_pagination_keyboard(page, total_count)
     await message.answer(text, reply_markup=kb)
@@ -203,9 +203,9 @@ async def process_pagination(callback: CallbackQuery, callback_data: Pagination)
     page = callback_data.page
     users, total_count = await get_users_page(page)
 
-    text = f"📊 Список пользователей (Страница {page}/{total_count}):\n\n"
+    text = f"📊 Список пользователей (Страница {page}/{total_count//page}):\n\n"
     for user in users:
-        text += f"🆔 {user[0]} — @{user[1]}\n"
+        text += f"👤{user[0]} {user[1]} — 🎂{user[2]}\n"
 
     kb = get_pagination_keyboard(page, total_count)
 
