@@ -106,7 +106,7 @@ async def process_sex(callback: CallbackQuery, state: FSMContext):
             F"Имя: {first_name}\n"
             F"Фамилия: {last_name}\n"
             F"Username: {username}\n"
-            F"Пол: {('Мужской' if sex == "Male" else 'Женский')}"
+            F"Пол: {'Мужской' if sex == "Male" else 'Женский'}"
             F"День рождения: {bday}")
 
     await callback.message.edit_text(text, reply_markup=InlineKeyboardMarkup([InlineKeyboardButton(text='Верно', style='Success', callback_data='Correct'),
