@@ -17,7 +17,7 @@ dp = Dispatcher()
 
 async def check_birthdays_today():
     today = datetime.now(ZoneInfo("Europe/Moscow")).date()
-    db = sqlite3.connect('data/server_test.db')
+    db = sqlite3.connect('/data/server_test.db')
     sql = db.cursor()
     for user in sql.execute(F"""SELECT user_id, username, first_name, bday FROM users""").fetchall():
         bday_object = datetime.strptime(user[3], "%Y-%m-%d").date()
@@ -30,7 +30,7 @@ async def check_birthdays_today():
 
 @dp.startup()
 async def on_startup():
-    db = sqlite3.connect('data/server_test.db')
+    db = sqlite3.connect('/data/server_test.db')
     sql = db.cursor()
     sql.execute("""CREATE TABLE IF NOT EXISTS users (
                 user_id INTEGER,

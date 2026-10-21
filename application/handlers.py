@@ -56,7 +56,7 @@ class Questionnaire(StatesGroup):
 
 @router.message(Command("reg"))
 async def cmd_reg(message: Message, state: FSMContext):
-    db = sqlite3.connect('../data/server_test.db')
+    db = sqlite3.connect('/data/server_test.db')
     sql = db.cursor()
     if sql.execute(f"""SELECT user_id from users WHERE user_id = {message.from_user.id}""").fetchone() is not None:
         await message.answer('Вы уже зарегестрированы в системе.')
@@ -105,7 +105,7 @@ async def process_sex(message: Message, state: FSMContext):
         bday = user_data.get("bday")
         sex = ('Male' if message.text == '1' else 'Female')
 
-        db = sqlite3.connect('../data/server_test.db')
+        db = sqlite3.connect('/data/server_test.db')
         sql = db.cursor()
         sql.execute(F"""INSERT INTO users (user_id, username, first_name, last_name, sex, bday, group_id) VALUES (?, ?, ?, ?, ?, ?, ?)
     """, (message.from_user.id, message.from_user.username, first_name, last_name, sex, bday, message.chat.id))
@@ -117,7 +117,7 @@ async def process_sex(message: Message, state: FSMContext):
 
 @router.message(Command("database"))
 async def cmd_database(message: Message):
-    db = sqlite3.connect('../data/server_test.db')
+    db = sqlite3.connect('/data/server_test.db')
     sql = db.cursor()
     rows = sql.execute(f"SELECT * FROM users").fetchall()
     for row in rows:
@@ -128,7 +128,7 @@ async def cmd_database(message: Message):
 
 @router.message(Command("search"))
 async def cmd_search(message: Message):
-    db = sqlite3.connect('../data/server_test.db')
+    db = sqlite3.connect('/data/server_test.db')
     sql = db.cursor()
     username = message.text.split(' ')[-1]
 
