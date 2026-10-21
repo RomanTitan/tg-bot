@@ -110,8 +110,10 @@ async def process_sex(callback: CallbackQuery, state: FSMContext):
             F"Пол: {sex_}"
             F"День рождения: {bday}")
 
-    await callback.message.edit_text(text, reply_markup=InlineKeyboardMarkup([InlineKeyboardButton(text='Верно', style='Success', callback_data='Correct'),
-                                                                              InlineKeyboardButton(text='Заполнить заново', callback_data='Incorrect')]))
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text='Верно', style='Success', callback_data='Correct'))
+    builder.add(InlineKeyboardButton(text='Заполнить заново', callback_data='Incorrect'))
+    await callback.message.edit_text(text, reply_markup=builder.as_markup())
 
 @router.callback_query(F.data.in_(["Correct", "Incorrect"]))
 async def process_correct(callback: CallbackQuery, state: FSMContext):
