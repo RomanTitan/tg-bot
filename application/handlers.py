@@ -171,6 +171,8 @@ def get_pagination_keyboard(page: int, total_count: int):
     if page * ITEMS_PER_PAGE < total_count:
         builder.add(InlineKeyboardButton(text="Вперед ➡️", callback_data=Pagination(page=page + 1).pack()))
 
+
+    builder.add(InlineKeyboardButton(text="Выйти", callback_data='delete_message', style="danger"))
     return builder.as_markup()
 
 
@@ -183,12 +185,17 @@ async def show_users(message: Message):
         await message.answer("База данных пуста.")
         return
 
-    text = f"📊 Список пользователей (Страница {page}):\n\n"
+    text = f"📊 Список пользователей (Страница {page}/{total_count}):\n\n"
     for user in users:
         text += f"🆔 {user[0]} — @{user[1]}\n"
 
     kb = get_pagination_keyboard(page, total_count)
     await message.answer(text, reply_markup=kb)
+
+@router.callback_query(lambda query: query.data == "delete_message")
+async def delete_message(callback: CallbackQuery):
+    await callback.message.delete()
+    await callback.answer()
 
 
 @router.callback_query(Pagination.filter())
@@ -196,7 +203,7 @@ async def process_pagination(callback: CallbackQuery, callback_data: Pagination)
     page = callback_data.page
     users, total_count = await get_users_page(page)
 
-    text = f"📊 Список пользователей (Страница {page}):\n\n"
+    text = f"📊 Список пользователей (Страница {page}/{total_count}):\n\n"
     for user in users:
         text += f"🆔 {user[0]} — @{user[1]}\n"
 
