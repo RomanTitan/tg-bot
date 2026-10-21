@@ -20,6 +20,7 @@ load_dotenv()
 router = Router()
 BOT_TOKEN = os.getenv("TOKEN")
 bot = Bot(token=BOT_TOKEN)
+months = ['', 'января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря']
 
 @router.message(Command("info"))
 async def cmd_info(message: Message):
@@ -107,8 +108,8 @@ async def process_sex(callback: CallbackQuery, state: FSMContext):
             F"Имя: {first_name}\n"
             F"Фамилия: {last_name}\n"
             F"Username: {username}\n"
-            F"Пол: {sex_}"
-            F"День рождения: {bday}")
+            F"Пол: {sex_}\n"
+            F"День рождения: {bday.date().day} {months[bday.date().month]}")
 
     builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text='Верно', style='Success', callback_data='Correct'))
