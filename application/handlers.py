@@ -224,7 +224,7 @@ async def process_pagination(callback: CallbackQuery, callback_data: Pagination)
 
     text = f"📊 Список пользователей (Страница {page}/{total_count//ITEMS_PER_PAGE}):\n\n"
     for user in users:
-        text += f"👤{user[0]} {user[1]} — 🎂{user[2].date("%d.%m.%Y")}\n"
+        text += f"👤{user[0]} {user[1]} — 🎂{user[2]}\n"
 
     kb = get_pagination_keyboard(page, total_count)
 
