@@ -71,6 +71,7 @@ async def cmd_reg(message: Message, state: FSMContext):
         db.close()
         await message.answer("Привет! Для начала регистрации напиши, пожалуйста, своё имя и фамилию (Например: Иван Иванов).")
         await state.set_state(Questionnaire.waiting_for_name)
+        await message.delete()
 
 @router.message(Questionnaire.waiting_for_name)
 async def process_name(message: Message, state: FSMContext):
@@ -191,6 +192,7 @@ async def show_users(message: Message):
 
     kb = get_pagination_keyboard(page, total_count)
     await message.answer(text, reply_markup=kb)
+    await message.delete()
 
 @router.callback_query(lambda query: query.data == "delete_message")
 async def delete_message(callback: CallbackQuery):
