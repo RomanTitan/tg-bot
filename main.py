@@ -49,7 +49,7 @@ async def on_startup():
 async def main():
     dp.include_router(router)
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(check_birthdays_today, "interval", seconds=60)
+    scheduler.add_job(check_birthdays_today, "cron", hour=9, minute=0)
 
     scheduler.start()
     await dp.start_polling(bot)
