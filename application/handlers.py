@@ -62,6 +62,7 @@ class Questionnaire(StatesGroup):
 
 @router.message(Command("reg"))
 async def cmd_reg(message: Message, state: FSMContext):
+    await message.delete()
     db = sqlite3.connect('/data/server.db')
     sql = db.cursor()
     if sql.execute(f"""SELECT user_id from users WHERE user_id = {message.from_user.id}""").fetchone() is not None:
@@ -71,7 +72,6 @@ async def cmd_reg(message: Message, state: FSMContext):
         db.close()
         await message.answer("Привет! Для начала регистрации напиши, пожалуйста, своё имя и фамилию (Например: Иван Иванов).")
         await state.set_state(Questionnaire.waiting_for_name)
-        await message.delete()
 
 @router.message(Questionnaire.waiting_for_name)
 async def process_name(message: Message, state: FSMContext):
@@ -179,6 +179,7 @@ def get_pagination_keyboard(page: int, total_count: int):
 
 @router.message(F.text == "/users")
 async def show_users(message: Message):
+    await message.delete()
     page = 1
     users, total_count = await get_users_page(page)
 
@@ -192,7 +193,6 @@ async def show_users(message: Message):
 
     kb = get_pagination_keyboard(page, total_count)
     await message.answer(text, reply_markup=kb)
-    await message.delete()
 
 @router.callback_query(lambda query: query.data == "delete_message")
 async def delete_message(callback: CallbackQuery):
