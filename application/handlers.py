@@ -183,7 +183,7 @@ async def show_users(message: Message):
         await message.answer("База данных пуста.")
         return
 
-    text = f"📊 ", Bold('Список пользователей'), " (Страница {page}):\n\n"
+    text = f"📊 Список пользователей (Страница {page}):\n\n"
     for user in users:
         text += f"🆔 {user[0]} — @{user[1]}\n"
 
@@ -196,7 +196,7 @@ async def process_pagination(callback: CallbackQuery, callback_data: Pagination)
     page = callback_data.page
     users, total_count = await get_users_page(page)
 
-    text = f"📊 ", Bold('Список пользователей'), " (Страница {page}):\n\n"
+    text = f"📊 Список пользователей (Страница {page}):\n\n"
     for user in users:
         text += f"🆔 {user[0]} — @{user[1]}\n"
 
