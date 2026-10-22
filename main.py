@@ -11,7 +11,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from dotenv import load_dotenv
 
-from app.handlers import router
+from application.handlers import router
 
 load_dotenv()
 BOT_TOKEN = os.getenv("TOKEN")
