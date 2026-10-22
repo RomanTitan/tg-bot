@@ -248,23 +248,23 @@ async def cmd_start(message: Message, state: FSMContext):
                       username=message.from_user.username)
     db = sqlite3.connect('/data/server.db')
     sql = db.cursor()
-    user = list(sql.execute("SELECT * FROM users WHERE user_id = ? OR username = ?", (message.from_user.id, message.from_user.username)).fetchone())
+    user = sql.execute("SELECT * FROM users WHERE user_id = ? OR username = ?", (message.from_user.id, message.from_user.username)).fetchone()
     if user == None or user[1] == "" or user[1] == None:
         cmd_reg(message=message, state=state)
         return
     elif user[0] == "" or user[0] == None:
         sql.execute("UPDATE users SET user_id = ? WHERE username = ?", (message.from_user.id, message.from_user.username))
         db.commit()
-        user[0] = message.from_user.id
 
-    user[4] = ('Мужской' if user[4] == 'Male' else 'Женский')
-    user[5] = datetime.strptime(user[5], "%d.%m.%Y").date()
+    user_id = message.from_user.id
+    sex = ('Мужской' if user[4] == 'Male' else 'Женский')
+    bday = datetime.strptime(user[5], "%d.%m.%Y").date()
     text = (f"👤Ваши данные:\n\n"
-            f"ID: {user[0]}\n"
+            f"ID: {user_id}\n"
             f"Username: @{user[1]}\n"
             f"Имя Фамилия: {user[2]} {user[3]}\n"
-            f"Пол: {user[4]}\n"
-            f"День рождения: {user[5].day} {months[user[5].month]} {user[5].year} года")
+            f"Пол: {sex}\n"
+            f"День рождения: {bday.day} {months[bday.month]} {bday.year} года")
 
     kb = InlineKeyboardBuilder()
     kb.add(InlineKeyboardButton(text='Верно', style='Success', callback_data='Correct_check'))
