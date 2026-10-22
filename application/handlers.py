@@ -281,4 +281,4 @@ async def cmd_start(message: Message, state: FSMContext):
 
 @router.message(Command('id'))
 async def cmd_id(message: Message):
-    await bot.send_message(chat_id=message.from_user.id, text=message.chat.id)
+    await bot.send_message(chat_id=str(message.from_user.id), text=str(message.chat.id))
