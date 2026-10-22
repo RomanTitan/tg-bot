@@ -244,13 +244,11 @@ async def process_pagination(callback: CallbackQuery, callback_data: Pagination)
 @router.message(CommandStart)
 async def cmd_start(message: Message, state: FSMContext):
     await message.delete()
-    state.update_data(user_id=message.from_user.id,
-                      username=message.from_user.username)
     db = sqlite3.connect('/data/server.db')
     sql = db.cursor()
     user = sql.execute("SELECT * FROM users WHERE user_id = ? OR username = ?", (message.from_user.id, message.from_user.username)).fetchone()
     if user == None or user[1] == "" or user[1] == None:
-        cmd_reg(message=message, state=state)
+        await cmd_reg(message=message, state=state)
         return
     elif user[0] == "" or user[0] == None:
         sql.execute("UPDATE users SET user_id = ? WHERE username = ?", (message.from_user.id, message.from_user.username))
