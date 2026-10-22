@@ -9,6 +9,7 @@ from aiogram.utils.formatting import *
 
 import asyncio
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import os
 from dotenv import load_dotenv
 from random import choice, randint
@@ -48,17 +49,14 @@ async def cmd_reg(message: Message, state: FSMContext):
     db = sqlite3.connect('/data/server.db')
     sql = db.cursor()
     if sql.execute(f"""SELECT user_id from users WHERE user_id = {message.from_user.id}""").fetchone() is not None:
-        msg = await message.answer('Вы уже зарегестрированы в системе.')
+        sql.execute(f"""DELETE FROM users WHERE user_id = {message.from_user.id}""")
+        db.commit()
         db.close()
-        await asyncio.sleep(3)
-        await msg.delete()
-    else:
-        db.close()
-        await message.answer("Привет! Для начала регистрации напиши, пожалуйста, своё имя и фамилию (Например: Иван Иванов).")
-        await state.update_data(user_id=message.from_user.id,
-                                username=message.from_user.username,
-                                group_id=message.chat.id)
-        await state.set_state(Questionnaire.waiting_for_name)
+    await message.answer("Для начала регистрации напиши, пожалуйста, своё имя и фамилию (Например: Иван Иванов).")
+    await state.update_data(user_id=message.from_user.id,
+                            username=message.from_user.username,
+                            group_id=message.chat.id)
+    await state.set_state(Questionnaire.waiting_for_name)
 
 @router.message(Questionnaire.waiting_for_name)
 async def process_name(message: Message, state: FSMContext):
@@ -139,7 +137,7 @@ async def process_correct(callback: CallbackQuery, state: FSMContext):
 
         await callback.message.edit_text("Регистрация успешна.", reply_markup=None)
     elif callback.data == "Correct_check":
-        if datetime.astimezone('Europe/Moscow').hour < 16:
+        if datetime.now(ZoneInfo("Europe/Moscow")).hour < 16:
             await callback.message.edit_text('Отлично, спасибо тебе за проверку данных, хорошего дня 😊')
         else:
             await callback.message.edit_text('Отлично, спасибо тебе за проверку данных, хорошего вечера 😊')
@@ -249,12 +247,13 @@ async def cmd_start(message: Message, state: FSMContext):
     sql = db.cursor()
     user = sql.execute("SELECT * FROM users WHERE user_id = ? OR username = ?", (message.from_user.id, message.from_user.username)).fetchone()
     if user == None or user[1] == "" or user[1] == None:
+        db.close()
         await cmd_reg(message=message, state=state)
         return
     elif user[0] == "" or user[0] == None:
         sql.execute("UPDATE users SET user_id = ? WHERE username = ?", (message.from_user.id, message.from_user.username))
         db.commit()
-
+    db.close()
     user_id = message.from_user.id
     sex = ('Мужской' if user[4] == 'Male' else 'Женский')
     bday = datetime.strptime(user[5], "%Y-%m-%d").date()
