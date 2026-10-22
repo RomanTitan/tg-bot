@@ -251,7 +251,7 @@ async def cmd_start(message: Message, state: FSMContext):
     await message.delete()
     db = sqlite3.connect('/data/server.db')
     sql = db.cursor()
-    user = sql.execute(f"SELECT * FROM users WHERE user_id = {message.from_user.id}").fetchone()
+    user = sql.execute(f"SELECT * FROM users WHERE user_id = {message.from_user.id} OR username ={message.from_user.username}").fetchone()
     if user == None:
         db.close()
         await cmd_reg(message=message, state=state)
