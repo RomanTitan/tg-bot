@@ -248,7 +248,7 @@ async def cmd_start(message: Message, state: FSMContext):
                       username=message.from_user.username)
     db = sqlite3.connect('/data/server.db')
     sql = db.cursor()
-    user = sql.execute("SELECT * FROM users WHERE user_id = ? OR username = ?", (message.from_user.id, message.from_user.username)).fetchone()
+    user = list(sql.execute("SELECT * FROM users WHERE user_id = ? OR username = ?", (message.from_user.id, message.from_user.username)).fetchone())
     if user == None or user[1] == "" or user[1] == None:
         cmd_reg(message=message, state=state)
         return
@@ -257,7 +257,7 @@ async def cmd_start(message: Message, state: FSMContext):
         db.commit()
         user[0] = message.from_user.id
 
-    user[4] = ('Мужской' if user[4] == "Male" else 'Женский')
+    user[4] = ('Мужской' if user[4] == 'Male' else 'Женский')
     text = (f"👤Ваши данные:\n\n"
             f"ID: {user[0]}\n"
             f"Username: @{user[1]}\n"
