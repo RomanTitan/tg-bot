@@ -258,12 +258,13 @@ async def cmd_start(message: Message, state: FSMContext):
         user[0] = message.from_user.id
 
     user[4] = ('Мужской' if user[4] == 'Male' else 'Женский')
+    user[5] = datetime.strptime(user[5], "%d.%m.%Y").date()
     text = (f"👤Ваши данные:\n\n"
             f"ID: {user[0]}\n"
             f"Username: @{user[1]}\n"
             f"Имя Фамилия: {user[2]} {user[3]}\n"
             f"Пол: {user[4]}\n"
-            f"День рождения: {user[5].date().day} {months[user[5].date().month]} {user[5].date().year} года")
+            f"День рождения: {user[5].day} {months[user[5].month]} {user[5].year} года")
 
     kb = InlineKeyboardBuilder()
     kb.add(InlineKeyboardButton(text='Верно', style='Success', callback_data='Correct_check'))
