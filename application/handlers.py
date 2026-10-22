@@ -246,7 +246,7 @@ async def process_pagination(callback: CallbackQuery, callback_data: Pagination)
     await callback.message.edit_text(text, reply_markup=kb)
     await callback.answer()
 
-@router.message(CommandStart, F.chat.type == "private")
+@router.message(Command('start'), F.chat.type == "private")
 async def cmd_start(message: Message, state: FSMContext):
     await message.delete()
     db = sqlite3.connect('/data/server.db')

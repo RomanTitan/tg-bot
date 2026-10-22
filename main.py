@@ -27,13 +27,13 @@ async def check_birthdays_today():
 
         if bday_object.month == today.month and bday_object.day == today.day:
             if user[1] != None and user[1] != "":
-                await bot.send_message(chat_id="-1004366034007",
+                await bot.send_message(chat_id="-1003825546584",
                                        text=f"{user[2]} {user[3]} (@{user[1]}) сегодня отмечает свой день рождения!🎊 Все срочно поздравляем 🎉")
             elif user[0] != None and user[0] != "":
                 link = html.link('@'+user[2], f"tg://user?id={user[0]}")
-                await bot.send_message(chat_id="-1004366034007",
+                await bot.send_message(chat_id="-1003825546584",
                                        text=f"{user[2]} {user[3]} ({link}) сегодня отмечает свой день рождения!🎊 Все срочно поздравляем 🎉", parse_mode=ParseMode.HTML)
-            await bot.send_animation(chat_id="-1004366034007", animation='CgACAgQAAxkBAAICcWrYlN4B5EU8e0n3yrHSysak2qqIAAJSAwACtQ_FUFcodGqTLKyLPQQ')
+            await bot.send_animation(chat_id="-1003825546584", animation='CgACAgQAAxkBAAICcWrYlN4B5EU8e0n3yrHSysak2qqIAAJSAwACtQ_FUFcodGqTLKyLPQQ')
             #await bot.send_message(chat_id="1848696190", text=f"Ало, {user[2]} {user[3]} сегодня др отмечает, поздравил быстро.")
     db.close()
 
