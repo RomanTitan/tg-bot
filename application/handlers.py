@@ -111,7 +111,7 @@ async def process_sex(callback: CallbackQuery, state: FSMContext):
             F"Фамилия: {last_name}\n"
             F"Username: {username}\n"
             F"Пол: {sex_}\n"
-            F"День рождения: {bday.date().day} {months[bday.date().month]}")
+            F"День рождения: {bday.day} {months[bday.month]}")
 
     builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text='Верно', style='Success', callback_data='Correct'))
@@ -270,4 +270,3 @@ async def cmd_start(message: Message, state: FSMContext):
     kb.add(InlineKeyboardButton(text='Заполнить заново', style='Danger', callback_data='Incorrect'))
 
     await message.answer(text, reply_markup=kb)
-
