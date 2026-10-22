@@ -84,13 +84,13 @@ async def process_bday(message: Message, state: FSMContext):
         await state.update_data(bday=datetime.strptime(message.text, "%d.%m.%Y").date())
 
         builder = InlineKeyboardBuilder()
-        builder.add(InlineKeyboardButton(text='Мужской', callback_data='Male'))
-        builder.add(InlineKeyboardButton(text='Женский', callback_data='Female'))
+        builder.add(InlineKeyboardButton(text='Мужской', callback_data='male'))
+        builder.add(InlineKeyboardButton(text='Женский', callback_data='female'))
 
         await message.answer(f"Отлично, осталось указать пол.", reply_markup=builder.as_markup())
 
 
-@router.callback_query(F.data.in_(["Male", "Female"]))
+@router.callback_query(F.data.in_(["male", "female"]))
 async def process_sex(callback: CallbackQuery, state: FSMContext):
     user_data = await state.get_data()
     user_id = user_data.get('user_id')
@@ -100,7 +100,7 @@ async def process_sex(callback: CallbackQuery, state: FSMContext):
     last_name = user_data.get("last_name")
     bday = user_data.get("bday")
     sex = callback.data
-    sex_ = ('Мужской' if sex == "Male" else 'Женский')
+    sex_ = ('Мужской' if sex == "male" else 'Женский')
     await state.update_data(sex=sex)
 
     text = (F"Проверь свои данные:\n\n"
@@ -267,7 +267,7 @@ async def cmd_start(message: Message, state: FSMContext):
             db.commit()
     db.close()
 
-    sex = ('Мужской' if user[4] == 'Male' else 'Женский')
+    sex = ('Мужской' if user[4] == 'male' else 'Женский')
     bday = datetime.strptime(user[5], "%Y-%m-%d").date()
     text = (f"👤Ваши данные:\n\n"
             f"ID: {message.from_user.id}\n"
