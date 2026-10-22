@@ -269,4 +269,4 @@ async def cmd_start(message: Message, state: FSMContext):
     kb.add(InlineKeyboardButton(text='Верно', style='Success', callback_data='Correct_check'))
     kb.add(InlineKeyboardButton(text='Заполнить заново', style='Danger', callback_data='Incorrect'))
 
-    await message.answer(text, reply_markup=kb)
+    await message.answer(text, reply_markup=kb.as_markup())
