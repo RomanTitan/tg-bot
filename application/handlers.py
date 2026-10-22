@@ -40,7 +40,7 @@ class Questionnaire(StatesGroup):
     waiting_for_sex = State()
 
 
-@router.message(Command("reg"), F.chat.type('private'))
+@router.message(Command("reg"), F.chat.type == 'private')
 async def cmd_reg(message: Message, state: FSMContext):
     try: await message.delete()
     except:
