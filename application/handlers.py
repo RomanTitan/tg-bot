@@ -138,11 +138,15 @@ async def process_correct(callback: CallbackQuery, state: FSMContext):
     elif callback.data == "Correct_check":
         if datetime.now(ZoneInfo("Europe/Moscow")).hour < 16:
             await callback.message.edit_text('Отлично, спасибо тебе за проверку данных, хорошего дня 😊')
+            await asyncio.sleep(5)
+            await callback.message.delete()
         else:
             await callback.message.edit_text('Отлично, спасибо тебе за проверку данных, хорошего вечера 😊')
+            await asyncio.sleep(5)
+            await callback.message.delete()
     else:
         await callback.message.edit_text('Пожалуйста, используй команду /reg для повторной регистриации.')
-        await asyncio.sleep(3)
+        await asyncio.sleep(5)
         await callback.message.delete()
     await state.clear()
 
