@@ -48,7 +48,7 @@ async def on_startup():
                 last_name TEXT,
                 sex TEXT NOT NULL,
                 bday DATETIME NOT NULL,
-                group_id INTEGER
+                group_id INTEGER,
                 admin BOOLEAN not null DEFAULT false
             )""")
     db.commit()
