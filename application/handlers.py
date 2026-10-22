@@ -42,7 +42,9 @@ class Questionnaire(StatesGroup):
 
 @router.message(Command("reg"))
 async def cmd_reg(message: Message, state: FSMContext):
-    await message.delete()
+    try: await message.delete()
+    except:
+        pass
     db = sqlite3.connect('/data/server.db')
     sql = db.cursor()
     if sql.execute(f"""SELECT user_id from users WHERE user_id = {message.from_user.id}""").fetchone() is not None:
@@ -113,10 +115,10 @@ async def process_sex(callback: CallbackQuery, state: FSMContext):
 
     builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text='Верно', style='Success', callback_data='Correct'))
-    builder.add(InlineKeyboardButton(text='Заполнить заново', callback_data='Incorrect'))
+    builder.add(InlineKeyboardButton(text='Заполнить заново', style='Danger', callback_data='Incorrect'))
     await callback.message.edit_text(text, reply_markup=builder.as_markup())
 
-@router.callback_query(F.data.in_(["Correct", "Incorrect"]))
+@router.callback_query(F.data.in_(["Correct", "Incorrect", 'Correct_check']))
 async def process_correct(callback: CallbackQuery, state: FSMContext):
     if callback.data == "Correct":
         user_data = await state.get_data()
@@ -136,6 +138,11 @@ async def process_correct(callback: CallbackQuery, state: FSMContext):
         db.close()
 
         await callback.message.edit_text("Регистрация успешна.", reply_markup=None)
+    elif callback.data == "Correct_check":
+        if datetime.astimezone('Europe/Moscow').hour < 16:
+            await callback.message.edit_text('Отлично, спасибо тебе за проверку данных, хорошего дня 😊')
+        else:
+            await callback.message.edit_text('Отлично, спасибо тебе за проверку данных, хорошего вечера 😊')
     else:
         await callback.message.edit_text('Пожалуйста, используй команду /reg для повторной регистриации.')
         await asyncio.sleep(3)
@@ -233,3 +240,34 @@ async def process_pagination(callback: CallbackQuery, callback_data: Pagination)
 
     await callback.message.edit_text(text, reply_markup=kb)
     await callback.answer()
+
+@router.message(CommandStart)
+async def cmd_start(message: Message, state: FSMContext):
+    await message.delete()
+    state.update_data(user_id=message.from_user.id,
+                      username=message.from_user.username)
+    db = sqlite3.connect('/data/server.db')
+    sql = db.cursor()
+    user = sql.execute("SELECT * FROM users WHERE user_id = ? OR username = ?", (message.from_user.id, message.from_user.username)).fetchone()
+    if user == None or user[1] == "" or user[1] == None:
+        cmd_reg(message=message, state=state)
+        return
+    elif user[0] == "" or user[0] == None:
+        sql.execute("UPDATE users SET user_id = ? WHERE username = ?", (message.from_user.id, message.from_user.username))
+        db.commit()
+        user[0] = message.from_user.id
+
+    user[4] = ('Мужской' if user[4] == "Male" else 'Женский')
+    text = (f"👤Ваши данные:\n\n"
+            f"ID: {user[0]}\n"
+            f"Username: @{user[1]}\n"
+            f"Имя Фамилия: {user[2]} {user[3]}\n"
+            f"Пол: {user[4]}\n"
+            f"День рождения: {user[5].date().day} {months[user[5].date().month]} {user[5].date().year} года")
+
+    kb = InlineKeyboardBuilder()
+    kb.add(InlineKeyboardButton(text='Верно', style='Success', callback_data='Correct_check'))
+    kb.add(InlineKeyboardButton(text='Заполнить заново', style='Danger', callback_data='Incorrect'))
+
+    await message.answer(text, reply_markup=kb)
+
