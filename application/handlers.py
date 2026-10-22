@@ -214,7 +214,7 @@ async def show_users(message: Message):
 
     text = f"📊 Список пользователей (Страница {page}/{total_count//ITEMS_PER_PAGE}):\n\n"
     for user in users:
-        bday = f"{user[2].date().day}.{user[2].date().month}.{user[2].date().year}"
+        bday = f"{user[2].day}.{user[2].month}.{user[2].year}"
         text += f"👤{user[0]} {user[1]} — 🎂{bday}\n"
 
     kb = get_pagination_keyboard(page, total_count)
