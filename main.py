@@ -6,27 +6,35 @@ import sqlite3
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from zoneinfo import ZoneInfo
-from aiogram import Bot, Dispatcher, F
+from aiogram import Bot, Dispatcher, F, html
+from aiogram.client.default import DefaultBotProperties
+from aiogram.enums import ParseMode
 from dotenv import load_dotenv
 
-from application.handlers import router
+from app.handlers import router
 
 load_dotenv()
 BOT_TOKEN = os.getenv("TOKEN")
-bot = Bot(token=BOT_TOKEN)
+bot = Bot(token=BOT_TOKEN,default_properties=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
 
 async def check_birthdays_today():
     today = datetime.now(ZoneInfo("Europe/Moscow")).date()
     db = sqlite3.connect('/data/server.db')
     sql = db.cursor()
-    for user in sql.execute(F"""SELECT user_id, username, first_name, bday FROM users""").fetchall():
-        bday_object = datetime.strptime(user[3], "%d.%m.%Y").date()
+    for user in sql.execute(F"""SELECT user_id, username, first_name, last_name, bday, sex FROM users""").fetchall():
+        bday_object = datetime.strptime(user[4], "%Y-%m-%d").date()
 
         if bday_object.month == today.month and bday_object.day == today.day:
-            await bot.send_message(chat_id="-5534575983", text=f"{user[2]} (@{user[1]}) сегодня отмечает свой день рождения! Все срочно поздравляем!!!")
-            await bot.send_animation(chat_id="-5534575983", animation='CgACAgQAAxkBAAICcWrYlN4B5EU8e0n3yrHSysak2qqIAAJSAwACtQ_FUFcodGqTLKyLPQQ')
-            await bot.send_message(chat_id="1848696190", text=f"Ало, {user[2]} (@{user[1]}) сегодня др отмечает, поздравил быстро.")
+            if user[1] != None and user[1] != "":
+                await bot.send_message(chat_id="-1004366034007",
+                                       text=f"{user[2]} {user[3]} (@{user[1]}) сегодня отмечает свой день рождения! Все срочно поздравляем!!!")
+            elif user[0] != None and user[0] != "":
+                link = html.link('@'+user[2], f"tg://user?id={user[0]}")
+                await bot.send_message(chat_id="-1004366034007",
+                                       text=f"{user[2]} {user[3]} ({link}) сегодня отмечает свой день рождения! Все срочно поздравляем!!!", parse_mode=ParseMode.HTML)
+            await bot.send_animation(chat_id="-1004366034007", animation='CgACAgQAAxkBAAICcWrYlN4B5EU8e0n3yrHSysak2qqIAAJSAwACtQ_FUFcodGqTLKyLPQQ')
+            #await bot.send_message(chat_id="1848696190", text=f"Ало, {user[2]} {user[3]} сегодня др отмечает, поздравил быстро.")
     db.close()
 
 @dp.startup()
@@ -49,9 +57,9 @@ async def on_startup():
 async def main():
     dp.include_router(router)
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(check_birthdays_today, "cron", hour=9, minute=0)
-
+    scheduler.add_job(check_birthdays_today, "cron", hour=0, minute=0)
     scheduler.start()
+
     await dp.start_polling(bot)
 
     while True:

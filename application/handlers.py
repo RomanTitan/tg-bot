@@ -1,4 +1,4 @@
-from aiogram import Router, F, Bot
+from aiogram import Router, F, Bot, html
 from aiogram.filters import Command, CommandStart, callback_data
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -10,12 +10,11 @@ from aiogram.utils.formatting import *
 import asyncio
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from math import ceil
 import os
 from dotenv import load_dotenv
 from random import choice, randint
 import sqlite3
-
-from application.keyboard import inline
 
 load_dotenv()
 router = Router()
@@ -212,9 +211,10 @@ async def show_users(message: Message):
         await message.answer("База данных пуста.")
         return
 
-    text = f"📊 Список пользователей (Страница {page}/{total_count//ITEMS_PER_PAGE}):\n\n"
+    text = f"📊 Список пользователей (Страница {page}/{ceil(total_count/ITEMS_PER_PAGE)}):\n\n"
     for user in users:
-        bday = f"{user[2].day}.{user[2].month}.{user[2].year}"
+        bday_ = datetime.strptime(user[2], '%Y-%m-%d').date()
+        bday = f"{bday_.day} {months[bday_.month]} {bday_.year}"
         text += f"👤{user[0]} {user[1]} — 🎂{bday}\n"
 
     kb = get_pagination_keyboard(page, total_count)
@@ -231,9 +231,11 @@ async def process_pagination(callback: CallbackQuery, callback_data: Pagination)
     page = callback_data.page
     users, total_count = await get_users_page(page)
 
-    text = f"📊 Список пользователей (Страница {page}/{total_count//ITEMS_PER_PAGE}):\n\n"
+    text = f"📊 Список пользователей (Страница {page}/{ceil(total_count/ITEMS_PER_PAGE)}):\n\n"
     for user in users:
-        text += f"👤{user[0]} {user[1]} — 🎂{user[2]}\n"
+        bday_ = datetime.strptime(user[2], '%Y-%m-%d').date()
+        bday = f"{bday_.day} {months[bday_.month]} {bday_.year}"
+        text += f"👤{user[0]} {user[1]} — 🎂{bday}\n"
 
     kb = get_pagination_keyboard(page, total_count)
 
@@ -245,21 +247,27 @@ async def cmd_start(message: Message, state: FSMContext):
     await message.delete()
     db = sqlite3.connect('/data/server.db')
     sql = db.cursor()
-    user = sql.execute("SELECT * FROM users WHERE user_id = ? OR username = ?", (message.from_user.id, message.from_user.username)).fetchone()
-    if user == None or user[1] == "" or user[1] == None:
+    user = sql.execute(f"SELECT * FROM users WHERE user_id = {message.from_user.id}").fetchone()
+    if user == None:
         db.close()
         await cmd_reg(message=message, state=state)
         return
-    elif user[0] == "" or user[0] == None:
+    if user[0] == "" or user[0] == None:
         sql.execute("UPDATE users SET user_id = ? WHERE username = ?", (message.from_user.id, message.from_user.username))
         db.commit()
+    if user[1] == "" or user[1] == None:
+        if message.from_user.username == None:
+            pass
+        else:
+            sql.execute(f"UPDATE users SET username = ? WHERE user_id = ?", (message.from_user.username, message.from_user.id))
+            db.commit()
     db.close()
-    user_id = message.from_user.id
+
     sex = ('Мужской' if user[4] == 'Male' else 'Женский')
     bday = datetime.strptime(user[5], "%Y-%m-%d").date()
     text = (f"👤Ваши данные:\n\n"
-            f"ID: {user_id}\n"
-            f"Username: @{user[1]}\n"
+            f"ID: {message.from_user.id}\n"
+            f"Username: @{message.from_user.username}\n"
             f"Имя Фамилия: {user[2]} {user[3]}\n"
             f"Пол: {sex}\n"
             f"День рождения: {bday.day} {months[bday.month]} {bday.year} года")
