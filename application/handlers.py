@@ -84,7 +84,7 @@ async def process_bday(message: Message, state: FSMContext):
         await message.answer(f"Введи корректную дату в формате ДД.ММ.ГГГГ (Например: 17.01.2008).")
         await state.set_state(Questionnaire.waiting_for_bday)
     else:
-        await state.update_data(bday=datetime.strptime(message.text, "%d.%m.%Y"))
+        await state.update_data(bday=datetime.strptime(message.text, "%d.%m.%Y").date())
 
         builder = InlineKeyboardBuilder()
         builder.add(InlineKeyboardButton(text='Мужской', callback_data='Male'))
@@ -216,7 +216,8 @@ async def show_users(message: Message):
 
     text = f"📊 Список пользователей (Страница {page}/{total_count//ITEMS_PER_PAGE}):\n\n"
     for user in users:
-        text += f"👤{user[0]} {user[1]} — 🎂{user[2]}\n"
+        bday = f"{user[2].date().day}.{user[2].date().month}.{user[2].date().year}"
+        text += f"👤{user[0]} {user[1]} — 🎂{bday}\n"
 
     kb = get_pagination_keyboard(page, total_count)
     await message.answer(text, reply_markup=kb)
@@ -256,7 +257,7 @@ async def cmd_start(message: Message, state: FSMContext):
 
     user_id = message.from_user.id
     sex = ('Мужской' if user[4] == 'Male' else 'Женский')
-    bday = datetime.strptime(user[5], "%d.%m.%Y").date()
+    bday = datetime.strptime(user[5], "%Y-%m-%d").date()
     text = (f"👤Ваши данные:\n\n"
             f"ID: {user_id}\n"
             f"Username: @{user[1]}\n"
