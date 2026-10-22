@@ -26,12 +26,12 @@ months = ['', 'января','февраля','марта','апреля','ма�
 async def cmd_info(message: Message):
     me = await bot.get_me()
     await message.answer(
-        "Информация о боте:\n"
+        "Информация:\n"
         f"ID: {me.id}\n"
         f"Имя: {me.first_name}\n"
         f"Username: @{me.username}\n"
-        f"Chat ID: {message.chat.id}\n"
-        f"User ID: {message.from_user.id}"
+        f"User ID: {message.from_user.id}\n"
+        f"Username: {message.from_user.username}"
     )
 
 class Questionnaire(StatesGroup):
@@ -40,7 +40,7 @@ class Questionnaire(StatesGroup):
     waiting_for_sex = State()
 
 
-@router.message(Command("reg"))
+@router.message(Command("reg"), F.chat.type('private'))
 async def cmd_reg(message: Message, state: FSMContext):
     try: await message.delete()
     except:
@@ -201,24 +201,24 @@ def get_pagination_keyboard(page: int, total_count: int):
     return builder.as_markup()
 
 
-@router.message(F.text == "/users")
-async def show_users(message: Message):
-    await message.delete()
-    page = 1
-    users, total_count = await get_users_page(page)
-
-    if not users:
-        await message.answer("База данных пуста.")
-        return
-
-    text = f"📊 Список пользователей (Страница {page}/{ceil(total_count/ITEMS_PER_PAGE)}):\n\n"
-    for user in users:
-        bday_ = datetime.strptime(user[2], '%Y-%m-%d').date()
-        bday = f"{bday_.day} {months[bday_.month]} {bday_.year}"
-        text += f"👤{user[0]} {user[1]} — 🎂{bday}\n"
-
-    kb = get_pagination_keyboard(page, total_count)
-    await message.answer(text, reply_markup=kb)
+# @router.message(F.text == "/users")
+# async def show_users(message: Message):
+#     await message.delete()
+#     page = 1
+#     users, total_count = await get_users_page(page)
+#
+#     if not users:
+#         await message.answer("База данных пуста.")
+#         return
+#
+#     text = f"📊 Список пользователей (Страница {page}/{ceil(total_count/ITEMS_PER_PAGE)}):\n\n"
+#     for user in users:
+#         bday_ = datetime.strptime(user[2], '%Y-%m-%d').date()
+#         bday = f"{bday_.day} {months[bday_.month]} {bday_.year}"
+#         text += f"👤{user[0]} {user[1]} — 🎂{bday}\n"
+#
+#     kb = get_pagination_keyboard(page, total_count)
+#     await message.answer(text, reply_markup=kb)
 
 @router.callback_query(lambda query: query.data == "delete_message")
 async def delete_message(callback: CallbackQuery):
@@ -242,7 +242,7 @@ async def process_pagination(callback: CallbackQuery, callback_data: Pagination)
     await callback.message.edit_text(text, reply_markup=kb)
     await callback.answer()
 
-@router.message(CommandStart)
+@router.message(CommandStart, F.chat.type == "private")
 async def cmd_start(message: Message, state: FSMContext):
     await message.delete()
     db = sqlite3.connect('/data/server.db')
@@ -277,3 +277,8 @@ async def cmd_start(message: Message, state: FSMContext):
     kb.add(InlineKeyboardButton(text='Заполнить заново', style='Danger', callback_data='Incorrect'))
 
     await message.answer(text, reply_markup=kb.as_markup())
+
+
+@router.message(Command('id'))
+async def cmd_id(message: Message):
+    await bot.send_message(chat_id=message.from_user.id, text=message.chat.id)
