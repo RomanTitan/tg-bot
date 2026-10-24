@@ -29,7 +29,7 @@ async def check_birthdays_today():
             if user[1] != None and user[1] != "":
                 await bot.send_message(chat_id="-1003825546584",
                                        message_thread_id=3,
-                                       text=f"{user[2]} {user[3]} (@{user[1]}) сегодня отмечает свой день рождения!🎊 Все срочно поздравляем 🎉")
+                                       text=f"{user[2]} {user[3]} (@{user[1]}) сегодня отмечает свой день рождения!🎊 Желаю самого наилучшего настроения  в этот день! 🎉")
             elif user[0] != None and user[0] != "":
                 link = html.link('@'+user[2], f"tg://user?id={user[0]}")
                 await bot.send_message(chat_id="-1003825546584",
@@ -59,7 +59,7 @@ async def on_startup():
 async def main():
     dp.include_router(router)
     scheduler = AsyncIOScheduler(timezone="Europe/Moscow")
-    scheduler.add_job(check_birthdays_today, "cron", minute=39, hour=12)
+    scheduler.add_job(check_birthdays_today, "cron", hour=13, minute=22)
     scheduler.start()
 
     await dp.start_polling(bot)
