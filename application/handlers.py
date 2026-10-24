@@ -34,6 +34,13 @@ async def cmd_info(message: Message):
         f"Username: {message.from_user.username}"
     )
 
+async def check_admin(id: int):
+    db = sqlite3.connect('/data/server.db')
+    sql = db.cursor()
+    adm = sql.execute("""SELECT admin FROM users WHERE user_id = ?""", (id))
+    db.close()
+    return adm.fetchone()
+
 class Questionnaire(StatesGroup):
     waiting_for_name = State()
     waiting_for_bday = State()
@@ -286,3 +293,8 @@ async def cmd_start(message: Message, state: FSMContext):
 @router.message(Command('id'))
 async def cmd_id(message: Message):
     await bot.send_message(chat_id=str(message.from_user.id), text=str(message.chat.id))
+
+@router.message(Command('set_admin'))
+async def cmd_set_admin(message: Message, state: FSMContext):
+    if check_admin(message.from_user.id):
+
