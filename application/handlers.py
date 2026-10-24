@@ -294,7 +294,7 @@ async def cmd_start(message: Message, state: FSMContext):
 async def cmd_id(message: Message):
     await bot.send_message(chat_id=str(message.from_user.id), text=str(message.chat.id))
 
-@router.message(Command('set_admin'))
-async def cmd_set_admin(message: Message, state: FSMContext):
-    if check_admin(message.from_user.id):
+# @router.message(Command('set_admin'))
+# async def cmd_set_admin(message: Message, state: FSMContext):
+#     if check_admin(message.from_user.id):
 
